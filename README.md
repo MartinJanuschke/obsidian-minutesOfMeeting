@@ -93,3 +93,7 @@ If you have multiple URLs, you can also do:
 ## API Documentation
 
 See https://github.com/obsidianmd/obsidian-api
+
+### Issues
+- Browser or any other Applications opens instead of email client
+  --> ensure that your mail client is set as default applikation [MacOs](https://support.apple.com/en-us/HT201607)
