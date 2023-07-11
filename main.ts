@@ -58,8 +58,9 @@ export default class MinutesOfMeetingPlugin extends Plugin {
 					item.setTitle("Print file path 👋🏻")
 						.setIcon("document")
 						.onClick(async () => {
-							new Notice(file.path);
-							window.location.href = "mailto:martin.januschke@googlemail.com"
+							// new Notice(file.path);
+							console.log(window.location)
+							window.location.href = 'mailto:martin.jansuchke@googlemail.com'
 						});
 				});
 			})
