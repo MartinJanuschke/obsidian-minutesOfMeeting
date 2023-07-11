@@ -9,6 +9,7 @@ import {
 	Setting,
 	setIcon,
 } from "obsidian";
+import { transporter } from "src/mailer";
 
 interface MinutesOfMeetingSettings {
 	mySetting: string;
@@ -26,14 +27,29 @@ export default class MinutesOfMeetingPlugin extends Plugin {
 		this.addRibbonIcon("keyboard", "Print to console", () => {
 			console.log("Hello, you!");
 		});
+		transporter.verify((error, success) => {
+			if (error) {
+				console.log(error);
+			} else {
+				console.log("server is ready");
+			}
+		});
 
 		// This adds a simple command that can be triggered anywhere
 		this.addCommand({
-			id: 'open-sample-modal-simple',
-			name: 'Open sample modal (simple)',
+			id: "open-minutes-of-meeting-modal",
+			name: "New Minutes of Meeting",
 			callback: () => {
 				new MinutesModal(this.app).open();
-			}
+			},
+		});
+		// This adds a simple command that can be triggered anywhere
+		this.addCommand({
+			id: "open-person-modal",
+			name: "New Person",
+			callback: () => {
+				new PersonModal(this.app).open();
+			},
 		});
 
 		this.registerEvent(
@@ -43,6 +59,7 @@ export default class MinutesOfMeetingPlugin extends Plugin {
 						.setIcon("document")
 						.onClick(async () => {
 							new Notice(file.path);
+							window.location.href = "mailto:martin.januschke@googlemail.com"
 						});
 				});
 			})
@@ -60,7 +77,10 @@ export default class MinutesOfMeetingPlugin extends Plugin {
 			})
 		);
 
-		// await this.loadSettings();
+		await this.loadSettings();
+
+		// This adds a settings tab so the user can configure various aspects of the plugin
+		this.addSettingTab(new SampleSettingTab(this.app, this));
 
 		// // This creates an icon in the left ribbon.
 		// const ribbonIconEl = this.addRibbonIcon('dice', 'Sample Plugin', (evt: MouseEvent) => {
@@ -111,9 +131,6 @@ export default class MinutesOfMeetingPlugin extends Plugin {
 		// 	}
 		// });
 
-		// // This adds a settings tab so the user can configure various aspects of the plugin
-		// this.addSettingTab(new SampleSettingTab(this.app, this));
-
 		// // If the plugin hooks up any global DOM events (on parts of the app that doesn't belong to this plugin)
 		// // Using this function will automatically remove the event listener when this plugin is disabled.
 		// this.registerDomEvent(document, 'click', (evt: MouseEvent) => {
@@ -146,12 +163,53 @@ class MinutesModal extends Modal {
 
 	onOpen() {
 		const { contentEl } = this;
-		contentEl.setText("Woah!");
+		contentEl.createEl("h1", { text: "Meeting details" });
 	}
 
 	onClose() {
 		const { contentEl } = this;
 		contentEl.empty();
+	}
+}
+
+class newNote {
+	constructor() {}
+}
+
+class PersonModal extends Modal {
+	result: string;
+
+	constructor(app: App) {
+		super(app);
+	}
+
+	onOpen() {
+		const { contentEl } = this;
+		contentEl.createEl("h1", { text: "Meeting details" });
+		new Setting(contentEl).setName("Name").addText((text) =>
+			text.onChange((value) => {
+				this.result = value;
+			})
+		);
+
+		new Setting(contentEl).addButton((btn) =>
+			btn
+				.setButtonText("Submit")
+				.setCta()
+				.onClick(() => {
+					this.close();
+					this.onSubmit(this.result);
+				})
+		);
+	}
+
+	onClose() {
+		const { contentEl } = this;
+		contentEl.empty();
+	}
+
+	onSubmit(result: any) {
+		this.app.vault.create('templates/test.md','a sample file',{})
 	}
 }
 
@@ -168,11 +226,11 @@ class SampleSettingTab extends PluginSettingTab {
 
 		containerEl.empty();
 
-		containerEl.createEl("h2", { text: "Settings for my awesome plugin." });
+		containerEl.createEl("h2", { text: "Minutes of Meeting Settings" });
 
 		new Setting(containerEl)
-			.setName("Setting #1")
-			.setDesc("It's a secret")
+			.setName("SMPT Server")
+			.setDesc("some text here...")
 			.addText((text) =>
 				text
 					.setPlaceholder("Enter your secret")
