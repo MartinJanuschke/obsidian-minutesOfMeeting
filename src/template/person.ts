@@ -10,6 +10,6 @@ import {
 	setIcon,
 } from "obsidian";
 
-export function createPersonNote(){
-const {vault} = this.app
+export function createPersonNote() {
+	const { vault } = this.app;
 }

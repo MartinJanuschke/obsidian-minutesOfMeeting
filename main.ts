@@ -1,15 +1,16 @@
 import {
 	App,
-	Editor,
-	MarkdownView,
+	// Editor,
+	// MarkdownView,
 	Modal,
 	Notice,
 	Plugin,
 	PluginSettingTab,
 	Setting,
-	setIcon,
+	// setIcon,
 } from "obsidian";
-import { transporter } from "src/mailer";
+// import { transporter } from "src/mailer";
+import { mailBuilder } from "src/mailtoPerClient";
 
 interface MinutesOfMeetingSettings {
 	mySetting: string;
@@ -27,13 +28,7 @@ export default class MinutesOfMeetingPlugin extends Plugin {
 		this.addRibbonIcon("keyboard", "Print to console", () => {
 			console.log("Hello, you!");
 		});
-		transporter.verify((error, success) => {
-			if (error) {
-				console.log(error);
-			} else {
-				console.log("server is ready");
-			}
-		});
+		
 
 		// This adds a simple command that can be triggered anywhere
 		this.addCommand({
@@ -59,8 +54,22 @@ export default class MinutesOfMeetingPlugin extends Plugin {
 						.setIcon("document")
 						.onClick(async () => {
 							// new Notice(file.path);
-							console.log(window.location)
-							window.location.href = 'mailto:martin.jansuchke@googlemail.com'
+							const noteFile = this.app.workspace.getActiveFile(); // Currently Open Note
+							// if (!noteFile.name) return; // Nothing Open
+							let text, title
+							// Read the currently open note file. We are reading it off the HDD - we are NOT accessing the editor to do this.
+							if (noteFile) {
+								text = await this.app.vault.read(noteFile);
+								title = await this.app.vault.getName()
+								this.app.fileManager.processFrontMatter(noteFile, (data)=>console.log(data))
+								noteFile.stat
+								console.log(title, noteFile.stat, text)
+							}
+							window.location.href = mailBuilder(
+								["martin.jansuchke@gmail.com", "test@org.de"],
+								"test subject",
+								noteFile
+							);
 						});
 				});
 			})
@@ -173,9 +182,9 @@ class MinutesModal extends Modal {
 	}
 }
 
-class newNote {
-	constructor() {}
-}
+// class newNote {
+// 	constructor() {}
+// }
 
 class PersonModal extends Modal {
 	result: string;
@@ -210,7 +219,7 @@ class PersonModal extends Modal {
 	}
 
 	onSubmit(result: any) {
-		this.app.vault.create('templates/test.md','a sample file',{})
+		this.app.vault.create("templates/test.md", "a sample file", {});
 	}
 }
 
