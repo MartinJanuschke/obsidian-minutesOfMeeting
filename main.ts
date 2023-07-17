@@ -1,35 +1,30 @@
 import {
 	App,
-	// Editor,
-	// MarkdownView,
 	Modal,
 	Notice,
 	Plugin,
 	PluginSettingTab,
 	Setting,
-	// setIcon,
 } from "obsidian";
-// import { transporter } from "src/mailer";
+import { PersonSuggest } from "src/elements/personSuggest.modal";
+import { PersonModal } from "src/elements/createPerson.modal";
 import { mailBuilder } from "src/mailtoPerClient";
+import { convertToHTML } from "src/util/renderer.helper";
 
 interface MinutesOfMeetingSettings {
 	mySetting: string;
+	htmlMail:boolean;
 }
 
 const DEFAULT_SETTINGS: MinutesOfMeetingSettings = {
 	mySetting: "default",
+	htmlMail: false,
 };
 
 export default class MinutesOfMeetingPlugin extends Plugin {
 	settings: MinutesOfMeetingSettings;
 
 	async onload() {
-		// left iconBar
-		this.addRibbonIcon("keyboard", "Print to console", () => {
-			console.log("Hello, you!");
-		});
-		
-
 		// This adds a simple command that can be triggered anywhere
 		this.addCommand({
 			id: "open-minutes-of-meeting-modal",
@@ -50,26 +45,28 @@ export default class MinutesOfMeetingPlugin extends Plugin {
 		this.registerEvent(
 			this.app.workspace.on("file-menu", (menu, file) => {
 				menu.addItem((item) => {
-					item.setTitle("Print file path 👋🏻")
+					item.setTitle("Send MoMs")
 						.setIcon("document")
 						.onClick(async () => {
 							// new Notice(file.path);
 							const noteFile = this.app.workspace.getActiveFile(); // Currently Open Note
 							// if (!noteFile.name) return; // Nothing Open
-							let text, title
+							let text: any, title: string;
 							// Read the currently open note file. We are reading it off the HDD - we are NOT accessing the editor to do this.
 							if (noteFile) {
 								text = await this.app.vault.read(noteFile);
-								title = await this.app.vault.getName()
-								this.app.fileManager.processFrontMatter(noteFile, (data)=>console.log(data))
-								noteFile.stat
-								console.log(title, noteFile.stat, text)
+								console.log(convertToHTML(text));
+								title = await this.app.vault.getName();
+								this.app.fileManager.processFrontMatter(
+									noteFile,
+									(data) =>
+										(window.location.href = mailBuilder(
+											data["attendees"],
+											`MoMs: ${title}`,
+											convertToHTML(text)
+										))
+								);
 							}
-							window.location.href = mailBuilder(
-								["martin.jansuchke@gmail.com", "test@org.de"],
-								"test subject",
-								noteFile
-							);
 						});
 				});
 			})
@@ -81,11 +78,18 @@ export default class MinutesOfMeetingPlugin extends Plugin {
 					item.setTitle("Print file path 👈")
 						.setIcon("document")
 						.onClick(async () => {
-							if (view.file) new Notice(view.file.path);
+							if (view.file) {
+								new Notice(view.file.path);
+							}
 						});
 				});
 			})
 		);
+
+		// Adds ribbon Icon to FuzzyModalChooser
+		this.addRibbonIcon("users", "person fuzzy dings", () => {
+			new PersonSuggest(this.app).open();
+		});
 
 		await this.loadSettings();
 
@@ -186,43 +190,6 @@ class MinutesModal extends Modal {
 // 	constructor() {}
 // }
 
-class PersonModal extends Modal {
-	result: string;
-
-	constructor(app: App) {
-		super(app);
-	}
-
-	onOpen() {
-		const { contentEl } = this;
-		contentEl.createEl("h1", { text: "Meeting details" });
-		new Setting(contentEl).setName("Name").addText((text) =>
-			text.onChange((value) => {
-				this.result = value;
-			})
-		);
-
-		new Setting(contentEl).addButton((btn) =>
-			btn
-				.setButtonText("Submit")
-				.setCta()
-				.onClick(() => {
-					this.close();
-					this.onSubmit(this.result);
-				})
-		);
-	}
-
-	onClose() {
-		const { contentEl } = this;
-		contentEl.empty();
-	}
-
-	onSubmit(result: any) {
-		this.app.vault.create("templates/test.md", "a sample file", {});
-	}
-}
-
 class SampleSettingTab extends PluginSettingTab {
 	plugin: MinutesOfMeetingPlugin;
 
@@ -238,7 +205,9 @@ class SampleSettingTab extends PluginSettingTab {
 
 		containerEl.createEl("h2", { text: "Minutes of Meeting Settings" });
 
-		new Setting(containerEl)
+		const divAlfonso = containerEl.createDiv("alfohonso");
+
+		new Setting(divAlfonso)
 			.setName("SMPT Server")
 			.setDesc("some text here...")
 			.addText((text) =>
@@ -250,6 +219,16 @@ class SampleSettingTab extends PluginSettingTab {
 						this.plugin.settings.mySetting = value;
 						await this.plugin.saveSettings();
 					})
+			);
+
+		new Setting(divAlfonso)
+			.setName("Toggle Test")
+			.setDesc("HTML Mail Toggle?")
+			.addToggle((val) =>
+				val.onChange(async (value) => {
+					this.plugin.settings.htmlMail = value
+					console.log(value), await this.plugin.saveSettings();
+				})
 			);
 	}
 }

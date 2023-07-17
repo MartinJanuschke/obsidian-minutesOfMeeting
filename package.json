@@ -13,6 +13,7 @@
 	"license": "MIT",
 	"devDependencies": {
 		"@types/node": "^16.11.6",
+		"@types/showdown": "^2.0.1",
 		"@typescript-eslint/eslint-plugin": "5.29.0",
 		"@typescript-eslint/parser": "5.29.0",
 		"builtin-modules": "3.3.0",
@@ -23,6 +24,7 @@
 	},
 	"dependencies": {
 		"@types/nodemailer": "^6.4.8",
-		"nodemailer": "^6.9.3"
+		"nodemailer": "^6.9.3",
+		"showdown": "^2.1.0"
 	}
 }

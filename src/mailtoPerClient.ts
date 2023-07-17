@@ -4,12 +4,13 @@ export function mailBuilder(to: string[], subject: string, body: any) {
 		args.push("subject=" + encodeURIComponent(subject));
 	}
 	if (typeof body !== "undefined") {
-		args.push("body=" + encodeURIComponent(body));
+		args.push("html-body=" + encodeURIComponent(body));
 	}
 
 	let url = "mailto:" + encodeURIComponent(to.toString());
 	if (args.length > 0) {
 		url += "?" + args.join("&");
 	}
+    console.log(url)
 	return url;
 }
